@@ -1,0 +1,430 @@
+var DEBUG = true;
+
+function log(s) {
+    window.console && console.log(s)
+}
+
+var useHttps = true;
+
+//常量定义
+var Const_CLog_IndexApp = "clickapp_1";//ClickLog的注册首页App广告点击key
+(function ($) {
+    // 扩展相关方法
+    //=====================================================================
+    // 验证框架
+    //=====================================================================
+    Valid = {
+        //@param obj Object 验证逻辑 键名为错误提示，键值为验证函数，函数的传参为当前INPUT元素，返回true显示错误提示
+        //逐个验证表单的每个域
+        //@param root Element|String 为表单元素或表单的CSS表达式
+        //@param name String   INPUT等元素的name属性，同时要求它拥有一个同名的类名，为了方便显示提示信息，
+        //@callbacks name Object  回调对象，可以存在error或者success方法
+        //此元素下拥有一个类名为tips的DIV，里面拥有三种提示
+        /*       <div class="inputBox">
+                    <span class="inputLabel">立即可见的提示信息</span>
+                    <input class="username" name="username" tabindex="10" />
+             </div>
+             <div class="tips" id="usernameTip">
+                    <p class="tipsInfo">获得焦点或输入时的提示信息</p>
+                    <p class="tipsError">失去焦点验证失败的错误信息</p>
+                    <p class="tipsSuc">失去焦点验证成功的信息——通常表现为一个绿勾</p>
+              </div>
+         */
+        check: function (root, name, obj, callbacks) {
+            $(root).delegate("." + name, "blur", function () {
+                if ($.Valid.isNeedCheck) {
+                    var ok = true;
+                    for (var msg in obj) {
+                        if (obj[msg](this)) {
+                            $.Valid.handleTip(this, "#" + name + "Tip", 0, msg, callbacks);
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (ok) {
+                        $.Valid.handleTip(this, "#" + name + "Tip", 1, msg, callbacks);
+                    }
+                    $.Valid.handlePlaceHoder(this, false);
+                }
+            }).delegate("." + name, "focus", function () {
+                //清空所有提示，以便重新验证
+                $.Valid.handleTip(this, "#" + name + "Tip", 2);
+                $.Valid.handlePlaceHoder(this, true);
+                if (name == 'validateCode') { // 图片验证码的特殊处理
+                    $(".verifyCode").addClass("hover");
+                    $("#imgCode").addClass("bigImgCode");
+                    $("#imgCode").addClass("bigImgCode2");
+                }
+            })
+
+        },
+        isNeedCheck: true,
+        //注意，当我们发出最后提交时，看一下$.Valid.nodes是否为空，不为空说明还有验证没通过
+        nodes: [],
+        //处理placehoder的显示隐藏与样式，获得焦点时会变浅
+        handlePlaceHoder: function (node, focus) {
+            var placehoder = $(node).parent().children(".inputLabel")
+            var parent = $(node).parent()
+            if (typeof (node.value) != "undefined" && node.value.length) {
+                //如果有文字，则隐藏placehoder
+                placehoder.addClass("inputLabelHide");
+            } else {
+                //如果没有文字，则显示placehoder
+                placehoder.removeClass("inputLabelHide");
+            }
+            if (focus) {
+                //将提示信息的颜色变浅
+                parent.addClass("inputFocus");
+            } else {
+                //将提示信息的颜色变深
+                parent.removeClass("inputFocus");
+            }
+        },
+        //用于显示错误提示
+        //HTML 格式 <div class="l tips"><em id="err-intro"></em></div>
+        //@param input 需要验证的INPUT元素
+        //@param id   装载各种提示信息的容器的ID
+        //@param status
+        //0 表示显示失败信息，这时第三个参数有效，显示这红色字
+        //1 表示显示成功信息，会在此元素的父节点上添加一个叫okey的类名，显示绿色的勾号
+        //2 表示隐藏成功与失败信息，去掉元素的innerHTML与父节点上的okey的类名
+        //4 表示仅仅显示信息
+        //@param msg 错误消息
+        handleTip: function (input, id, status, msg, callbacks) {
+            var tips = $(id);
+            var nodes = $.Valid.nodes;
+            var node = tips[0];
+            var index = $.inArray(node, nodes);
+            switch (status) {
+                case 0:
+                    tips.addClass("show_tips");
+                    tips.find(".tipsError").show().html(msg);
+                    tips.find(".tipsBg").show();
+                    tips.find(".tipsInfo").hide();
+                    //加上红色边框
+                    $(input).parent(".inputBox").addClass("inputError")
+                    $(input).parent(".inputBox").removeClass("inputSuc");
+                    if (index == -1) {//用去统计当前页面有多少个验证没有被通过
+                        nodes.push(node);
+                    }
+                    if (callbacks && callbacks.error) {
+                        callbacks.error()
+                    }
+                    break;
+                case 1:
+                    tips.removeClass("show_tips");
+                    tips.find(".tipsError").hide();
+                    tips.find(".tipsInfo").hide();
+                    tips.find(".tipsBg").hide();
+                    //移除红色边框 
+                    $(input).parent(".inputBox").removeClass("inputError");
+                    $(input).parent(".inputBox").addClass("inputSuc");
+                    if (index >= 0) {
+                        nodes.splice(index, 1);
+                    }
+                    if (callbacks && callbacks.success) {
+                        callbacks.success()
+                    }
+                    break
+                case 2:
+                    tips.find(".tipsError").hide();
+                    tips.find(".tipsInfo").show();
+                    if (tips.find(".tipsInfo").html() == "" || tips.find(".tipsInfo").html() == null) {
+                        tips.removeClass("show_tips");
+                        tips.find(".tipsBg").hide();
+                    } else {
+                        tips.addClass("show_tips");
+                        tips.find(".tipsBg").show();
+                    }
+                    //移除红色边框 
+                    $(input).parent(".inputBox").removeClass("inputError")
+                    $(input).parent(".inputBox").removeClass("inputSuc");
+                    if (index >= 0) {
+                        nodes.splice(index, 1);
+                    }
+                    break
+                case 3:
+                    //移除红色边框 
+                    for (var i = 0; i < nodes.length; i++) {
+                        $(nodes[i]).find("p").hide();
+                        $(nodes[i]).siblings(".inputBox").removeClass("inputError");
+                        $(input).parent(".inputBox").removeClass("inputSuc");
+                    }
+                    nodes.splice(0, nodes.length);
+                    break
+                case 4:
+                    tips.find(".tipsError").hide();
+                    tips.find(".tipsInfo").show().html(msg);
+                    if (tips.find(".tipsInfo").html() == "" || tips.find(".tipsInfo").html() == null) {
+                        tips.removeClass("show_tips");
+                        tips.find(".tipsBg").hide();
+                    } else {
+                        tips.addClass("show_tips");
+                        tips.find(".tipsBg").show();
+                    }
+                    //移除红色边框 
+                    $(input).parent(".inputBox").removeClass("inputError")
+                    $(input).parent(".inputBox").removeClass("inputSuc");
+                    break
+            }
+        }
+    }
+
+    form = function (url, data, target) {
+        var method = 'POST';
+        if (data == null) data = {};
+
+        var form = $('<form>').attr({
+            method: method,
+            action: url,
+            target: target
+        }).css({
+            display: 'none'
+        });
+
+        var addData = function (name, data) {
+            if ($.isArray(data)) {
+                for (var i = 0; i < data.length; i++) {
+                    var value = decodeURIComponent(data[i]);
+                    addData(name + '[]', value);
+                }
+            } else if (typeof data === 'object') {
+                for (var key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        addData(name + '[' + key + ']', decodeURIComponent(data[key]));
+                    }
+                }
+            } else if (data != null) {
+                form.append($('<input>').attr({
+                    type: 'hidden',
+                    name: String(name),
+                    value: String(decodeURIComponent(data))
+                }));
+            }
+        };
+
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                addData(key, data[key]);
+            }
+        }
+
+        return form.appendTo('body');
+    }
+
+    $.extend({
+        form: form,
+        Valid: Valid
+    });
+
+    window.validate = Valid.check;
+})(jQuery)
+/////////其他辅助方法///////////////////////
+
+//验证身份证
+function IDCardCheck(num) {
+    num = num.toUpperCase();
+    // 身份证号码为15位或者18位，15位时全为数字，18位前17位为数字，最后一位是校验位，可能为数字或字符X。
+    if (!(/(^\d{15}$)|(^\d{17}([0-9]|X)$)/.test(num))) {
+        // alert('输入的身份证号长度不对，或者号码不符合规定！\n15位号码应全为数字，18位号码末位可以为数字或X。');
+        return false;
+    }
+    // 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+    // 下面分别分析出生日期和校验位
+    var len, re;
+    len = num.length;
+    if (len == 15) {
+        re = new RegExp(/^(\d{6})(\d{2})(\d{2})(\d{2})(\d{3})$/);
+        var arrSplit = num.match(re);
+
+        // 检查生日日期是否正确
+        var dtmBirth = new Date('19' + arrSplit[2] + '/' + arrSplit[3] + '/' + arrSplit[4]);
+        var bGoodDay;
+        bGoodDay = (dtmBirth.getYear() == Number(arrSplit[2])) && ((dtmBirth.getMonth() + 1) == Number(arrSplit[3])) && (dtmBirth.getDate() == Number(arrSplit[4]));
+        if (!bGoodDay) {
+            // alert('输入的身份证号里出生日期不对！');
+            return false;
+        }
+        else {
+            // 将15位身份证转成18位
+            // 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+            var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+            var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+            var nTemp = 0, i;
+            num = num.substr(0, 6) + '19' + num.substr(6, num.length - 6);
+            for (i = 0; i < 17; i++) {
+                nTemp += num.substr(i, 1) * arrInt[i];
+            }
+            num += arrCh[nTemp % 11];
+            return true;
+        }
+    }
+    if (len == 18) {
+        re = new RegExp(/^(\d{6})(\d{4})(\d{2})(\d{2})(\d{3})([0-9]|X)$/);
+        var arrSplit = num.match(re);
+
+        // 检查生日日期是否正确
+        var dtmBirth = new Date(arrSplit[2] + "/" + arrSplit[3] + "/" + arrSplit[4]);
+        var bGoodDay;
+        bGoodDay = (dtmBirth.getFullYear() == Number(arrSplit[2])) && ((dtmBirth.getMonth() + 1) == Number(arrSplit[3])) && (dtmBirth.getDate() == Number(arrSplit[4]));
+        if (!bGoodDay) {
+            // alert(dtmBirth.getYear());
+            // alert(arrSplit[2]);
+            // alert('输入的身份证号里出生日期不对！');
+            return false;
+        }
+        else {
+            // 检验18位身份证的校验码是否正确。
+            // 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+            var valnum;
+            var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+            var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+            var nTemp = 0, i;
+            for (i = 0; i < 17; i++) {
+                nTemp += num.substr(i, 1) * arrInt[i];
+            }
+            valnum = arrCh[nTemp % 11];
+            if (valnum != num.substr(17, 1)) {
+                // alert('18位身份证的校验码不正确！'); //应该为： + valnum
+                return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+function CtoH(obj) {
+    var str = obj.value;
+    var result = "";
+    if (str != "" || str != undefined) {
+        for (var i = 0; i < str.length; i++) {
+            if (str.charCodeAt(i) == 12288) {
+                result += String.fromCharCode(str.charCodeAt(i) - 12256);
+                continue;
+            }
+            if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375)
+                result += String.fromCharCode(str.charCodeAt(i) - 65248);
+            else result += String.fromCharCode(str.charCodeAt(i));
+        }
+        obj.value = result;
+    }
+}
+
+function Trim(obj) {
+    var str = obj.value;
+    if (str != "" || str != undefined) {
+        str = str.replace(/\s+/g, "");
+        str = str.replace(/(^　*)|(　*$)/g, "");
+        obj.value = str;
+    }
+}
+
+//根据初始化的判断获取访问接口真实使用http还是https
+function getRequestUrl(url) {
+    useHttps = true;//默认全部为https
+    tmpUrl = url;
+    if (!useHttps) {
+        if (url.indexOf('https://') == 0) {
+            tmpUrl = 'http://' + url.substring(8);
+        }
+    }
+    return tmpUrl;
+}
+
+
+//日志相关
+//ClickLog相关
+function clog(clog_msg) {
+    var clog_authId = '621e960b506d5a23';  //已正式申请，正式环境有效的key
+    RecordIpicStaticSdo(clog_authId, clog_msg);
+}
+
+function RecordIpicStaticSdo(authId, msg) {
+    if (window.sdoLogger) {
+        sdoLogger.authId = authId;
+        sdoLogger.clickLog("clickevent=" + msg);
+        if (DEBUG) {
+            log("clickevent=" + msg);
+        }
+    }
+}
+
+var LoginLog = {
+    _url: 'http://loginlog.sdo.com/',
+    api: 'Reg_LogTime',
+    Log: function (param) {
+        setTimeout(function () {
+            LoginLog._url = LoginLog._url.replace('http:', window.location.protocol);
+            var img = document.createElement('img');
+            img.width = 1; img.height = 1; img.style.display = 'none';
+            document.body.appendChild(img);
+            img.src = LoginLog._url + LoginLog.api + '?' + param + '&r=' + Math.random();
+        }, 0);
+    },
+    apiError: 'Reg_AjaxError',
+    LogError: function (param) {
+        setTimeout(function () {
+            LoginLog._url = LoginLog._url.replace('http:', window.location.protocol);
+            var img = document.createElement('img');
+            img.width = 1; img.height = 1; img.style.display = 'none';
+            document.body.appendChild(img);
+            img.src = LoginLog._url + LoginLog.apiError + '?' + param + '&r=' + Math.random();
+        }, 0);
+    },
+    apiHpsFailed: 'Reg_HpsFailed',
+    LogHpsFailed: function (param) {
+        setTimeout(function () {
+            LoginLog._url = LoginLog._url.replace('http:', window.location.protocol);
+            var img = document.createElement('img');
+            img.width = 1; img.height = 1; img.style.display = 'none';
+            document.body.appendChild(img);
+            img.src = LoginLog._url + LoginLog.apiHpsFailed + '?' + param + '&r=' + Math.random();
+        }, 0);
+    }
+}
+
+
+
+//Cookie相关
+var encode = encodeURIComponent;
+var decode = decodeURIComponent;
+
+// Cookie.set('foo', 'bar', { httpOnly: true })  => "foo=bar; httpOnly"
+//将两个字符串变成一个cookie字段
+var Cookie = {
+    stringify: function (name, val, opts) {
+        var pairs = [name + '=' + encode(val)];
+        if (isFinite(opts) && typeof opts == "number") {
+            pairs.push('Max-Age=' + opts);
+        } else {
+            opts = opts || {};
+            if (opts.maxAge) pairs.push('Max-Age=' + opts.maxAge);
+            if (opts.domain) pairs.push('Domain=' + opts.domain);
+            if (opts.path) pairs.push('Path=' + opts.path);
+            if (opts.expires) pairs.push('Expires=' + opts.expires.toUTCString());
+            if (opts.httpOnly) pairs.push('HttpOnly');
+            if (opts.secure) pairs.push('Secure');
+        }
+        return pairs.join('; ');
+    }
+}
+
+Cookie.get = function (name) {
+    var ret, m;
+    if (/\S/.test(name)) {
+        if ((m = String(document.cookie).match(
+            new RegExp('(?:^| )' + name + '(?:(?:=([^;]*))|;|$)')))) {
+            ret = m[1] ? decode(m[1]) : '';
+        }
+    }
+    return ret;
+}
+Cookie.set = function (name, val, opts) {
+    var str = Cookie.stringify.apply(0, arguments)
+    document.cookie = str
+}
+// 置空，并立刻过期
+Cookie.remove = function (name, opt) {
+    Cookie.set.set(name, '', opt);
+}

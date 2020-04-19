@@ -1,0 +1,54 @@
+﻿var Shanda = {};
+Shanda.Game = {};
+Shanda.Game.Mmc = {};
+Shanda.Game.Mmc.Advert = {
+    // 执行广告脚本的初始化处理。
+    Initialize: function () {
+        this.Authentication();
+    },
+    // 执行SDO认证的加密SNDAID到PTID的转换。
+    Authentication: function () {
+        var ptid = Shanda.Game.Mmc.Advert.Cookies.Get("sdo_dw_track");
+        if (ptid == "" || ptid == null || ptid == "null") {
+            ptid = Shanda.Game.Mmc.Advert.Cookies.Get("sdid");
+            if (ptid == "" || ptid == null || ptid == "null") {
+                ptid = Shanda.Game.Mmc.Advert.Cookies.Get("ptid");
+            }
+        }
+        // 重写 PTID Cookie。
+        Shanda.Game.Mmc.Advert.Cookies.Set("ptid", ptid);
+    }
+};
+
+// 封装 Cookie 对象的相关处理逻辑。
+Shanda.Game.Mmc.Advert.Cookies = {
+    // 设置 Cookie。
+    Set: function (name, value) {
+        var expdate = new Date();
+        var argv = arguments;
+        var argc = arguments.length;
+        var expires = (argc > 2) ? argv[2] : null;
+        var path = (argc > 3) ? argv[3] : null;
+        var domain = "sdo.com";//(argc > 4) ? argv[4] : null;
+        var secure = (argc > 5) ? argv[5] : false;
+        if (expires != null) expdate.setTime(expdate.getTime() + (expires * 1000));
+        document.cookie = name + "=" + escape(encodeURIComponent(value)) + ((expires == null) ? "" : (";  expires=" + expdate.toGMTString()))
+            + ((path == null) ? "" : (";  path=" + path)) + ((domain == null) ? "" : (";  domain=" + domain))
+            + ((secure == true) ? ";  secure" : "");
+    },
+    // 获取 Cookie。
+    Get: function (name) {
+        var arr = document.cookie.match(new RegExp("(^| )" + name + "=([^;]*)(;|$)"));
+        if (arr != null) return unescape(decodeURIComponent(arr[2])); return null;
+    },
+    // 删除 Cookie
+    Remove: function (name) {
+        var exp = new Date();
+        exp.setTime(exp.getTime() - 1);
+        var cval = Get(name);
+        document.cookie = name + "=" + cval + ";  expires=" + exp.toGMTString();
+    }
+};
+Shanda.Game.Mmc.Advert.Initialize();
+
+document.write("<script type='text/javascript' language='javascript' src='http://adrs.sdo.com/ADRefererSystem/LogBot.aspx'></sc"+"ript>");

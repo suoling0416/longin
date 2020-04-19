@@ -1,0 +1,11 @@
+//require JSEncrypt Library.
+var REG_RSA_PUBLIC_KEY_PEM="-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4GbvDjivOlNZLcJcQ9Ue0FRbi1KZi1MGTUgXgQ/u/cdknF54Gg4BTSrTreWSuHI0TNJGSRxCR65Nm1zbK912SpT4invM721hZfrgKKmSITGsqVLuJM5rWQa5taOyRzFmzjgY7qDif9mF6LTMtw2i41UokAeS4vC4QSCkLQNZrlwIDAQAB-----END PUBLIC KEY-----";
+
+function encryptString(plainTxt)
+{
+	  return plainTxt;
+	  
+      var encrypt = new JSEncrypt();
+      encrypt.setPublicKey(REG_RSA_PUBLIC_KEY_PEM);
+      return encrypt.encrypt(plainTxt);
+}

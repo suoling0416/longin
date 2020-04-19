@@ -1,0 +1,48 @@
+.footer .footer_c .copy_box {
+    margin-left: 210px;
+    width: 850px;
+}
+
+.footer .footer_c .fflogo{
+    float: left;
+    margin-top: 45px;
+    margin-left: 10px;
+}
+
+.footer .footer_c .copy_box .cy_box{
+    width: 850px;
+}
+
+.footer .footer_c .copy_box .cy_box .f_2{
+    width: 250px;
+    margin-top: 20px;
+}
+
+.footer .footer_c .cy_box_2 {
+    color: #888;
+    text-align: left;
+    font-family:'宋体';
+    float: left;
+    line-height: 18px;
+}
+
+.footer .footer_c .copy_box .cy_box .f_1{
+    width: 600px;
+}
+
+.footer .footer_c .copy_box .cy_box .f_1 p{
+    line-height: 18px;
+    font-family: 宋体;
+    text-align: left;
+    height: 19px;
+    margin: 0;
+    color: #888;
+}
+
+.footer .footer_c .copy_box .cy_box .f_1 .f_n_1{
+    margin-right: 10px;
+}
+
+.footer .footer_c .copy_box .cy_box .f_1 .f_n_2{
+    margin-left: 10px;
+}

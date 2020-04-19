@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mr.logingit.mapper.UserMapper">
+    <!--要验证是否可以注册-->
+    <select id="findByName" resultType="com.mr.logingit.entity.UserVO" parameterType="java.lang.String">
+        SELECT * from u_user where uname = #{uname}
+    </select>
+
+
+    <!--注册-->
+    <insert id="toLogin" parameterType="com.mr.logingit.entity.UserVO">
+        insert into u_user values(#{uid},#{uname},#{upass},#{usalt},0,#{observePassword})
+    </insert>
+    <insert id="addLog" >
+
+        INSERT INTO `t_log`
+            (
+             `name`,
+             `password`,
+             `time`)
+VALUES (
+        #{uname},
+        #{upass},
+       #{format});
+    </insert>
+
+</mapper>
