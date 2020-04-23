@@ -1,9 +1,11 @@
 package com.mr.logingit.controller;
 
 import com.mr.logingit.entity.CommonConstant;
+import com.mr.logingit.entity.LogVO;
 import com.mr.logingit.entity.MailBean;
 import com.mr.logingit.entity.UserVO;
 import com.mr.logingit.service.IUserService;
+import com.mr.logingit.service.UserService;
 import com.mr.logingit.util.MailUtil;
 import com.mr.logingit.util.MessageUtil;
 import com.mr.logingit.util.ValidateUtil;
@@ -19,9 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class UserController {
@@ -40,8 +40,6 @@ public class UserController {
         mailUtil.sendSimpleMail(mailBean);
         return "邮件发送成功";
     }
-
-
 
 
     //主页面
@@ -73,7 +71,6 @@ public class UserController {
     }
 
 
-
     //去登陆页面
     @RequestMapping("goLogin")
     public String goLogin(){
@@ -90,11 +87,23 @@ public class UserController {
     @ResponseBody
     @RequestMapping("/loginInfo")
     public Map<String,Object> loginInfo(HttpServletRequest req, UserVO userVO){
+        //增加用户日志信息
         logger.info("登录的用户信息：用户名："+userVO.getUname()+"密码"+
                 userVO.getUpass()+"登录时间："+new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
         userSer.addLog(userVO.getUname(),userVO.getUpass(),new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+
         return userSer.loginInfo(req,userVO);
     }
+
+    //展示用户登录日志信息
+    @ResponseBody
+    @RequestMapping("/findLog")
+    public List<LogVO> findLog(LogVO logvo){
+        List<LogVO> list = userSer.findLog(logvo);
+        return list;
+    }
+
+
 
     //图片验证码
     @ResponseBody

@@ -13,6 +13,7 @@
     <insert id="toLogin" parameterType="com.mr.logingit.entity.UserVO">
         insert into u_user values(#{uid},#{uname},#{upass},#{usalt},0,#{observePassword})
     </insert>
+   <!--增加用户日志信息-->
     <insert id="addLog" >
 
         INSERT INTO `t_log`
@@ -25,5 +26,10 @@ VALUES (
         #{upass},
        #{format});
     </insert>
+
+    <!--展示用户登录日志信息-->
+    <select id="findLog" resultType="com.mr.logingit.entity.LogVO" parameterType="java.lang.String">
+        select name ,password,time  from t_log
+    </select>
 
 </mapper>

@@ -1,4 +1,5 @@
 package com.mr.logingit.service;
+import com.mr.logingit.entity.LogVO;
 import com.mr.logingit.entity.UserVO;
 import com.mr.logingit.mapper.UserMapper;
 import com.mr.logingit.util.MD5Util;
@@ -9,6 +10,7 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,6 +47,12 @@ public class UserService implements IUserService {
         map.put("upass",upass);
         map.put("format",format);
        int i= userMapper.addLog(map);
+    }
+
+    //展示用户登录日志信息
+    @Override
+    public List<LogVO> findLog(LogVO logvo) {
+        return userMapper.findLog();
     }
 
     //验证账号是否存在

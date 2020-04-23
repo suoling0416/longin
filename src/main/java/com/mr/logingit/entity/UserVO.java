@@ -17,15 +17,6 @@ public class UserVO {
 
     private String checkCode;
 
-
-    public String getCheckCode() {
-        return checkCode;
-    }
-
-    public void setCheckCode(String checkCode) {
-        this.checkCode = checkCode;
-    }
-
     public Integer getUid() {
         return uid;
     }
@@ -72,6 +63,14 @@ public class UserVO {
 
     public void setObservePassword(String observePassword) {
         this.observePassword = observePassword;
+    }
+
+    public String getCheckCode() {
+        return checkCode;
+    }
+
+    public void setCheckCode(String checkCode) {
+        this.checkCode = checkCode;
     }
 
     @Override

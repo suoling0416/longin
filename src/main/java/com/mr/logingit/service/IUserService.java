@@ -1,8 +1,10 @@
 package com.mr.logingit.service;
 
+import com.mr.logingit.entity.LogVO;
 import com.mr.logingit.entity.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,7 +19,9 @@ public interface IUserService {
     //登陆
     Map<String,Object> loginInfo(HttpServletRequest req, UserVO userVO);
 
-
+    //增加用户日志信息
     void addLog(String uname, String upass, String format);
+    //展示用户登录日志信息
+    List<LogVO> findLog(LogVO logvo);
 
 }
